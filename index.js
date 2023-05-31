@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
@@ -30,12 +31,23 @@ async function run() {
     const reviewCollection = client.db("bistroDb").collection("reviews");
     const cartCollection = client.db("bistroDb").collection("cart");
 
+    // starting jwt
+    // create a jwt token and save it on client site
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign
+        (user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+      res.send({ token });
+    });
+
     // users realated apis
     app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
+    // if user already created this site then he never crate user in this site thats mean he is existing user
+    // when user create with email and password and also googleLogin both user information will store in database and each user create user just only one time
     app.post("/users", async (req, res) => {
       const user = req.body;
       console.log(user);
@@ -78,6 +90,7 @@ async function run() {
       res.send(result);
     });
 
+    // who is admin and who is user part
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };

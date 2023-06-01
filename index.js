@@ -70,20 +70,19 @@ async function run() {
 
     // use verifyJWT before using verifyAdmin
     const verifyAdmin = async (req, res, next) => {
-      const email = req.query.email;
-      const query = { email: email };
+      const email = req.decoded.email;
+      const query = { email: email }
       const user = await usersCollection.findOne(query);
-      if (user?.role !== "admin") {
-        return res
-          .status(403)
-          .send({ error: true, message: "forbideen message" });
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ error: true, message: 'forbidden message' });
       }
       next();
-    };
+    }
 
     // users realated apis
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
+      console.log(result)
       res.send(result);
     });
 
@@ -143,18 +142,21 @@ async function run() {
     // security layer: verify jwt
     // same email
     // check admin
-    app.get("users/admin/:email", verifyJWT, async (req, res) => {
+    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
+      console.log(req.decoded.email , req.params.email);
+      const query = { email: email }
 
-      if (req.decoded.email !== email) {
-        res.send({ admin: false });
+      if (email !== req.decoded.email) {
+        res.send({ admin: false })
       }
 
-      const query = { email: email };
       const user = await usersCollection.findOne(query);
-      const result = { admin: user?.role === "admin" };
+      console.log(user);
+      const result = { admin: user?.role === 'admin' }
       res.send(result);
-    });
+    })
+
 
     // who is admin and who is user part
     app.patch("/users/admin/:id", async (req, res) => {
@@ -163,6 +165,18 @@ async function run() {
       const updateDoc = {
         $set: {
           role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.put("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "user",
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);

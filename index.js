@@ -62,8 +62,27 @@ async function run() {
       res.send({ token });
     });
 
+    /**
+     * 0. do not show secure links to those who should not see the links
+     * 1. use jwt token: verifyJWT
+     * 2. use verifyAdmin middleware
+     */
+
+    // use verifyJWT before using verifyAdmin
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbideen message" });
+      }
+      next();
+    };
+
     // users realated apis
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
@@ -96,17 +115,17 @@ async function run() {
     });
 
     // cart collection apis
-    app.get("/carts", verifyJWT , async (req, res) => {
+    app.get("/carts", verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         res.send([]);
       }
 
       const decodedEmail = req.decoded.email;
-      if(email !== decodedEmail) {
+      if (email !== decodedEmail) {
         return res
-        .status(403)
-        .send({ error: true, message: "forbidden access" });
+          .status(403)
+          .send({ error: true, message: "forbidden access" });
       }
 
       const query = { email: email };
@@ -117,6 +136,23 @@ async function run() {
     app.post("/carts", async (req, res) => {
       const item = req.body;
       const result = await cartCollection.insertOne(item);
+      res.send(result);
+    });
+
+    // checking which user is admin
+    // security layer: verify jwt
+    // same email
+    // check admin
+    app.get("users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        res.send({ admin: false });
+      }
+
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.role === "admin" };
       res.send(result);
     });
 

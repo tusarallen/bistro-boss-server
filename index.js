@@ -71,18 +71,20 @@ async function run() {
     // use verifyJWT before using verifyAdmin
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
-      const query = { email: email }
+      const query = { email: email };
       const user = await usersCollection.findOne(query);
-      if (user?.role !== 'admin') {
-        return res.status(403).send({ error: true, message: 'forbidden message' });
+      if (user?.role !== "admin") {
+        return res
+          .status(403)
+          .send({ error: true, message: "forbidden message" });
       }
       next();
-    }
+    };
 
     // users realated apis
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
-      console.log(result)
+      console.log(result);
       res.send(result);
     });
 
@@ -104,6 +106,12 @@ async function run() {
     // menu related apis
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/menu", async (req, res) => {
+      const newItem = req.body;
+      const result = await menuCollection.insertOne(newItem);
       res.send(result);
     });
 
@@ -142,21 +150,20 @@ async function run() {
     // security layer: verify jwt
     // same email
     // check admin
-    app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
-      console.log(req.decoded.email , req.params.email);
-      const query = { email: email }
+      console.log(req.decoded.email, req.params.email);
+      const query = { email: email };
 
       if (email !== req.decoded.email) {
-        res.send({ admin: false })
+        res.send({ admin: false });
       }
 
       const user = await usersCollection.findOne(query);
       console.log(user);
-      const result = { admin: user?.role === 'admin' }
+      const result = { admin: user?.role === "admin" };
       res.send(result);
-    })
-
+    });
 
     // who is admin and who is user part
     app.patch("/users/admin/:id", async (req, res) => {

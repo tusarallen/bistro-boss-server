@@ -109,7 +109,8 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/menu", async (req, res) => {
+    // add item components data going menucollection
+    app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
       const result = await menuCollection.insertOne(newItem);
       res.send(result);

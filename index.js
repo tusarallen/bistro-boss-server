@@ -109,10 +109,19 @@ async function run() {
       res.send(result);
     });
 
-    // add item components data going menucollection
+    // (AddItem components data)-clinet going (menucollection)-server
     app.post("/menu", verifyJWT, verifyAdmin, async (req, res) => {
       const newItem = req.body;
       const result = await menuCollection.insertOne(newItem);
+      res.send(result);
+    });
+
+    // delete (ManageItem) clinet data with specific id
+    app.delete("/menu/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await menuCollection.deleteOne(query);
       res.send(result);
     });
 

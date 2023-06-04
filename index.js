@@ -52,6 +52,7 @@ async function run() {
     const menuCollection = client.db("bistroDb").collection("menu");
     const reviewCollection = client.db("bistroDb").collection("reviews");
     const cartCollection = client.db("bistroDb").collection("cart");
+    const paymentCollection = client.db("bistroDb").collection("payments");
 
     // starting jwt
     // create a jwt token and save it on client site
@@ -221,6 +222,19 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret,
       });
+    });
+
+    // payment related api
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+
+      const query = {
+        _id: { $in: payment.caetItems.map((id) => new ObjectId(id)) },
+      };
+      const deleteResult = await cartCollection.deleteMany(query);
+
+      res.send(insertResult, deleteResult);
     });
 
     // Send a ping to confirm a successful connection

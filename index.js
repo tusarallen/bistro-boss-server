@@ -237,6 +237,17 @@ async function run() {
       res.send(insertResult, deleteResult);
     });
 
+    // AdminHome Panel
+    app.get("/admin-stats", async (req, res) => {
+      const users = await usersCollection.estimatedDocumentCount();
+      const products = await menuCollection.estimatedDocumentCount();
+      const orders = await paymentCollection.estimatedDocumentCount();
+
+      // best way to get some of a field is to use group and some operator
+
+      res.send({ users, products, orders });
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(

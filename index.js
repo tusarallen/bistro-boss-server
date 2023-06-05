@@ -238,14 +238,17 @@ async function run() {
     });
 
     // AdminHome Panel
-    app.get("/admin-stats", async (req, res) => {
+    app.get("/admin-stats", verifyJWT, verifyAdmin, async (req, res) => {
       const users = await usersCollection.estimatedDocumentCount();
       const products = await menuCollection.estimatedDocumentCount();
       const orders = await paymentCollection.estimatedDocumentCount();
 
       // best way to get some of a field is to use group and some operator
 
-      res.send({ users, products, orders });
+      const payments = await paymentCollection.find().toArray();
+      const revenue = payments.reduce((sum, payment) => sum + payment.price, 0);
+
+      res.send({ revenue, users, products, orders });
     });
 
     // Send a ping to confirm a successful connection
